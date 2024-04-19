@@ -1,12 +1,12 @@
-from read_in_data import ReadData
+from data_handler import DataHandler
 
 class Main():
 
     def __init__(self):
         print('Program starting...')
         
-        self.load_in_data()
+        self.init_data_handler()
     
-    def load_in_data(self):
+    def init_data_handler(self):
 
-        ReadData()
+        DataHandler()
