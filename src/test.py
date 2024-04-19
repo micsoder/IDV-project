@@ -1,3 +1,7 @@
-import pandas
+import pandas as pd
+print('hello')
 
-print('testing')
+fp = 'data/NUTS2_population_count.csv.gz'
+
+df = pd.read_csv(fp)
+print(df)
