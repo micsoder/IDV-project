@@ -98,6 +98,39 @@ class DataFiltering():
         self.bed_places_data_2017_2019 = self.bed_places_data[self.bed_places_data['TIME_PERIOD'].isin([2017, 2018, 2019])].reset_index(drop=True)
         self.GDP_data_2017_2019 = self.GDP_data[self.GDP_data['TIME_PERIOD'].isin([2017, 2018, 2019])].reset_index(drop=True)
 
+        print('ATTENTION 2017-2019')
+        print(self.population_data_2017_2019)
+        print(self.nights_spent_data_2017_2019)
+        print(self.bed_places_data_2017_2019)
+        print(self.GDP_data_2017_2019)
+
+        self.population_avg_percent_diff_2017_2019 = self.avg_percentual_different_between_2017_2019(self.population_data_2017_2019, 'population')
+        self.nights_avg_percent_diff_2017_2019 = self.avg_percentual_different_between_2017_2019(self.nights_spent_data_2017_2019, 'nights_spent')
+        self.beds_avg_percent_diff_2017_2019 = self.avg_percentual_different_between_2017_2019(self.bed_places_data_2017_2019, 'bed_places')
+        self.GDP_avg_percent_diff_2017_2019 = self.avg_percentual_different_between_2017_2019(self.GDP_data_2017_2019, 'GDP_per_capita')
+    
+        print(self.population_avg_percent_diff_2017_2019)
+        print(self.nights_avg_percent_diff_2017_2019)
+        print(self.beds_avg_percent_diff_2017_2019)
+        print(self.GDP_avg_percent_diff_2017_2019)
+
+
+    def avg_percentual_different_between_2017_2019(self, df, value):
+
+        df = df.groupby(['geo', 'TIME_PERIOD'])[value].sum().reset_index()
+        pivoted = df.pivot(index='geo', columns='TIME_PERIOD', values=value)
+
+        column_name = f'{value}_avg_percent_diff'
+        
+        pivoted['percent_diff_17_18'] = (pivoted[2018] - pivoted[2017]) / pivoted[2017] * 100
+        pivoted['percent_diff_18_19'] = (pivoted[2019] - pivoted[2018]) / pivoted[2018] * 100
+        pivoted[column_name] = (pivoted['percent_diff_17_18'] + pivoted['percent_diff_18_19']) / 2
+
+        new_df = pd.DataFrame({'geo': pivoted.index, column_name: pivoted[column_name]})
+        new_df.reset_index(drop=True, inplace=True)
+
+        return new_df
+
 
     def calculate_mean_for_2017_2019(self):
 
@@ -130,5 +163,5 @@ class DataFiltering():
         self.merged_mean_data_2017_2019.rename(columns={'population': 'population_avg_2017_2019', 'nights_spent': 'nights_spent_avg_2017_2019', 
                                                 'bed_places': 'bed_places_avg_2017_2019', 'GDP_per_capita': 'GDP_per_capita_avg_2017_2019' }, inplace=True)
 
-        print('merged mean data 2017-2019')
-        print(self.merged_mean_data_2017_2019)
+        #print('merged mean data 2017-2019')
+        #print(self.merged_mean_data_2017_2019)
