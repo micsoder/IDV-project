@@ -1,5 +1,6 @@
 import pandas as pd
 import geopandas as gpd
+from eu_countries import eu_countries
 
 
 class DataFiltering():
@@ -13,8 +14,10 @@ class DataFiltering():
         self.filter_bed_places()
         self.filter_GDP()
         self.select_data_from_2020()
+        self.merge_2020_values_to_df()
         self.select_data_from_2017_2019()
         self.calculate_mean_for_2017_2019()
+        self.merge_2017_2019_mean_values_to_df()
 
 
     def filter_nuts_polygons(self):
@@ -22,65 +25,100 @@ class DataFiltering():
         self.nuts2_polygons = self.nuts_polygons_unfiltered[self.nuts_polygons_unfiltered['LEVL_CODE'] == 2]
         self.nuts2_polygons = self.nuts2_polygons.sort_values(by='NUTS_ID', ascending=True)
         self.nuts2_polygons.reset_index(drop=True, inplace=True)
-        print('Polygons:')
-        print(self.nuts2_polygons)
 
 
     def filter_population(self):
         self.population_unfiltered_data = self.data.population_data
         self.population_data = self.population_unfiltered_data[['geo', 'TIME_PERIOD', 'OBS_VALUE']].copy()
+        self.population_data = self.population_data[self.population_data['geo'].str[:-2].isin(eu_countries)]
         self.population_data.rename(columns={'OBS_VALUE': 'population'}, inplace=True)
-        print('Population:')
-        print(self.population_data)
+        self.population_data.reset_index(drop=True, inplace=True)
         
 
     def filter_nights_spent(self):
         self.nights_spent_unfiltered_data = self.data.nights_spent_tourist_data
-        self.nights_spent_data = self.nights_spent_unfiltered_data[['geo', 'TIME_PERIOD', 'OBS_VALUE', 'c_resid']].copy()
+        self.nights_spent_data = self.nights_spent_unfiltered_data[['geo', 'TIME_PERIOD', 'OBS_VALUE']].copy()
+        self.nights_spent_data = self.nights_spent_data[self.nights_spent_data['geo'].str[:-2].isin(eu_countries)]
         self.nights_spent_data.rename(columns={'OBS_VALUE': 'nights_spent'}, inplace=True)
-        print('Nights spent:')
-        print(self.nights_spent_data)
+        self.nights_spent_data.reset_index(drop=True, inplace=True)
 
 
     def filter_bed_places(self):
         self.bed_places_unfiltered_data = self.data.bed_places_tourist_data
-        self.bed_places_data = self.bed_places_unfiltered_data[['geo', 'TIME_PERIOD', 'OBS_VALUE', 'accomunit']].copy()
+        self.bed_places_data = self.bed_places_unfiltered_data[['geo', 'TIME_PERIOD', 'OBS_VALUE']].copy()
+        self.bed_places_data = self.bed_places_data[self.bed_places_data['geo'].str[:-2].isin(eu_countries)]
         self.bed_places_data.rename(columns={'OBS_VALUE': 'bed_places'}, inplace=True)
-        print('Bed places:')
-        print(self.bed_places_data)        
+        self.bed_places_data.reset_index(drop=True, inplace=True)      
 
 
     def filter_GDP(self):
         self.GDP_unfiltered_data = self.data.GDP_data
         self.GDP_data = self.GDP_unfiltered_data[['geo', 'TIME_PERIOD', 'OBS_VALUE']].copy()
+        self.GDP_data = self.GDP_data[self.GDP_data['geo'].str[:-2].isin(eu_countries)]
         self.GDP_data.rename(columns={'OBS_VALUE': 'GDP_per_capita'}, inplace=True)
-        print('GDP:')
-        print(self.GDP_data)
+        self.GDP_data.reset_index(drop=True, inplace=True)
+
         
     def select_data_from_2020(self):
         
-        self.population_data_2020 = self.population_data[self.population_data['TIME_PERIOD'] == 2020]
-        self.nights_spent_data_2020 = self.nights_spent_data[self.nights_spent_data['TIME_PERIOD'] == 2020]
-        self.bed_places_data_2020 = self.bed_places_data[self.bed_places_data['TIME_PERIOD'] == 2020]
-        self.GDP_data_2020 = self.GDP_data[self.GDP_data['TIME_PERIOD'] == 2020]
+        self.population_data_2020 = self.population_data[self.population_data['TIME_PERIOD'] == 2020].reset_index(drop=True)
+        self.nights_spent_data_2020 = self.nights_spent_data[self.nights_spent_data['TIME_PERIOD'] == 2020].reset_index(drop=True)
+        self.bed_places_data_2020 = self.bed_places_data[self.bed_places_data['TIME_PERIOD'] == 2020].reset_index(drop=True)
+        self.GDP_data_2020 = self.GDP_data[self.GDP_data['TIME_PERIOD'] == 2020].reset_index(drop=True)
 
+        self.population_data_2020 = self.population_data_2020.drop(columns=['TIME_PERIOD'])
+        self.nights_spent_data_2020 = self.nights_spent_data_2020.drop(columns=['TIME_PERIOD'])
+        self.bed_places_data_2020 = self.bed_places_data_2020.drop(columns=['TIME_PERIOD'])
+        self.GDP_data_2020 = self.GDP_data_2020.drop(columns=['TIME_PERIOD'])
+
+        self.population_data_2020 = self.population_data_2020.groupby('geo').sum().reset_index()
+        self.nights_spent_data_2020 = self.nights_spent_data_2020.groupby('geo').sum().reset_index()
+        self.bed_places_data_2020 = self.bed_places_data_2020.groupby('geo').sum().reset_index()
+        self.GDP_data_2020 = self.GDP_data_2020.groupby('geo').sum().reset_index()
+
+    def merge_2020_values_to_df(self):
+
+        self.merged_data_2020 = pd.merge(self.population_data_2020, self.nights_spent_data_2020, on='geo')
+        self.merged_data_2020 = pd.merge(self.merged_data_2020, self.bed_places_data_2020, on='geo')
+        self.merged_data_2020 = pd.merge(self.merged_data_2020, self.GDP_data_2020, on='geo')
+        self.merged_data_2020[['nights_spent', 'bed_places']] = self.merged_data_2020[['nights_spent', 'bed_places']].astype(int)
+        self.merged_data_2020.rename(columns={'population': 'population_2020', 'nights_spent': 'nights_spent_2020', 
+                                                'bed_places': 'bed_places_2020', 'GDP_per_capita': 'GDP_per_capita_2020' }, inplace=True)
+
+        print('merged 2020 data:')
+        print(self.merged_data_2020)
 
     def select_data_from_2017_2019(self):
         
-        self.population_data_2017_2019 = self.population_data[self.population_data['TIME_PERIOD'].isin([2017, 2018, 2019])]
-        self.nights_spent_data_2017_2019 = self.nights_spent_data[self.nights_spent_data['TIME_PERIOD'].isin([2017, 2018, 2019])]
-        self.bed_places_data_2017_2019 = self.bed_places_data[self.bed_places_data['TIME_PERIOD'].isin([2017, 2018, 2019])]
-        self.GDP_data_2017_2019 = self.GDP_data[self.GDP_data['TIME_PERIOD'].isin([2017, 2018, 2019])]
+        self.population_data_2017_2019 = self.population_data[self.population_data['TIME_PERIOD'].isin([2017, 2018, 2019])].reset_index(drop=True)
+        self.nights_spent_data_2017_2019 = self.nights_spent_data[self.nights_spent_data['TIME_PERIOD'].isin([2017, 2018, 2019])].reset_index(drop=True)
+        self.bed_places_data_2017_2019 = self.bed_places_data[self.bed_places_data['TIME_PERIOD'].isin([2017, 2018, 2019])].reset_index(drop=True)
+        self.GDP_data_2017_2019 = self.GDP_data[self.GDP_data['TIME_PERIOD'].isin([2017, 2018, 2019])].reset_index(drop=True)
 
-        print(self.population_data_2017_2019)
+
     def calculate_mean_for_2017_2019(self):
 
-        self.population_mean = self.population_data_2017_2019.groupby('geo')['population'].mean()
-        self.nights_spent_mean = self.nights_spent_data_2017_2019.groupby('geo')['nights_spent'].mean()
-        self.bed_places_mean = self.bed_places_data_2017_2019.groupby('geo')['bed_places'].mean()
-        self.GDP_per_capita_mean = self.GDP_data_2017_2019.groupby('geo')['GDP_per_capita'].mean()
+        self.population_mean = self.population_data_2017_2019.groupby('geo')['population'].mean().reset_index()
+        self.population_mean['population'] = self.population_mean['population'].astype(int)
 
-        print(self.population_mean)
-        print(self.nights_spent_mean)
-        print(self.bed_places_mean)
-        print(self.GDP_per_capita_mean)
+        self.nights_spent_mean = self.nights_spent_data_2017_2019.groupby('geo')['nights_spent'].mean().reset_index()
+        self.nights_spent_mean['nights_spent'] = self.nights_spent_mean['nights_spent'].astype(int)
+
+        self.bed_places_mean = self.bed_places_data_2017_2019.groupby('geo')['bed_places'].mean().reset_index()
+        self.bed_places_mean['bed_places'] = self.bed_places_mean['bed_places'].astype(int)
+
+        self.GDP_per_capita_mean = self.GDP_data_2017_2019.groupby('geo')['GDP_per_capita'].mean().reset_index()
+        self.GDP_per_capita_mean['GDP_per_capita'] = self.GDP_per_capita_mean['GDP_per_capita'].astype(int)
+
+    
+    def merge_2017_2019_mean_values_to_df(self):
+
+        self.merged_mean_data_2017_2019 = pd.merge(self.population_mean, self.nights_spent_mean, on='geo')
+        self.merged_mean_data_2017_2019 = pd.merge(self.merged_mean_data_2017_2019, self.bed_places_mean, on='geo')
+        self.merged_mean_data_2017_2019 = pd.merge(self.merged_mean_data_2017_2019, self.GDP_per_capita_mean, on='geo')
+
+        self.merged_mean_data_2017_2019.rename(columns={'population': 'population_avg_2017_2019', 'nights_spent': 'nights_spent_avg_2017_2019', 
+                                                'bed_places': 'bed_places_avg_2017_2019', 'GDP_per_capita': 'GDP_per_capita_avg_2017_2019' }, inplace=True)
+
+        print('merged mean data 2017-2019')
+        print(self.merged_mean_data_2017_2019)
