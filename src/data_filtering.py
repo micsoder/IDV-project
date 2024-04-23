@@ -78,10 +78,13 @@ class DataFiltering():
 
     def merge_2020_values_to_df(self):
 
-        self.merged_data_2020 = pd.merge(self.population_data_2020, self.nights_spent_data_2020, on='geo')
-        self.merged_data_2020 = pd.merge(self.merged_data_2020, self.bed_places_data_2020, on='geo')
-        self.merged_data_2020 = pd.merge(self.merged_data_2020, self.GDP_data_2020, on='geo')
-        self.merged_data_2020[['nights_spent', 'bed_places']] = self.merged_data_2020[['nights_spent', 'bed_places']].astype(int)
+        self.merged_data_2020 = pd.merge(self.population_data_2020, self.nights_spent_data_2020, on='geo', how='outer')
+        self.merged_data_2020 = pd.merge(self.merged_data_2020, self.bed_places_data_2020, on='geo', how='outer')
+        self.merged_data_2020 = pd.merge(self.merged_data_2020, self.GDP_data_2020, on='geo', how='outer')
+        
+        self.merged_data_2020.fillna(0, inplace=True)
+
+        self.merged_data_2020[['population', 'nights_spent', 'bed_places', 'GDP_per_capita']] = self.merged_data_2020[['population', 'nights_spent', 'bed_places', 'GDP_per_capita']].astype(int)
         self.merged_data_2020.rename(columns={'population': 'population_2020', 'nights_spent': 'nights_spent_2020', 
                                                 'bed_places': 'bed_places_2020', 'GDP_per_capita': 'GDP_per_capita_2020' }, inplace=True)
 
@@ -98,24 +101,31 @@ class DataFiltering():
 
     def calculate_mean_for_2017_2019(self):
 
-        self.population_mean = self.population_data_2017_2019.groupby('geo')['population'].mean().reset_index()
+        self.population_mean = self.population_data_2017_2019.groupby('geo')['population'].sum().reset_index()
+        self.population_mean['population'] /= 3
         self.population_mean['population'] = self.population_mean['population'].astype(int)
 
-        self.nights_spent_mean = self.nights_spent_data_2017_2019.groupby('geo')['nights_spent'].mean().reset_index()
+        self.nights_spent_mean = self.nights_spent_data_2017_2019.groupby('geo')['nights_spent'].sum().reset_index()
+        self.nights_spent_mean['nights_spent'] /= 3
         self.nights_spent_mean['nights_spent'] = self.nights_spent_mean['nights_spent'].astype(int)
 
-        self.bed_places_mean = self.bed_places_data_2017_2019.groupby('geo')['bed_places'].mean().reset_index()
+        self.bed_places_mean = self.bed_places_data_2017_2019.groupby('geo')['bed_places'].sum().reset_index()
+        self.bed_places_mean['bed_places'] /= 3
         self.bed_places_mean['bed_places'] = self.bed_places_mean['bed_places'].astype(int)
 
-        self.GDP_per_capita_mean = self.GDP_data_2017_2019.groupby('geo')['GDP_per_capita'].mean().reset_index()
+        self.GDP_per_capita_mean = self.GDP_data_2017_2019.groupby('geo')['GDP_per_capita'].sum().reset_index()
+        self.GDP_per_capita_mean['GDP_per_capita'] /= 3
         self.GDP_per_capita_mean['GDP_per_capita'] = self.GDP_per_capita_mean['GDP_per_capita'].astype(int)
 
     
     def merge_2017_2019_mean_values_to_df(self):
 
-        self.merged_mean_data_2017_2019 = pd.merge(self.population_mean, self.nights_spent_mean, on='geo')
-        self.merged_mean_data_2017_2019 = pd.merge(self.merged_mean_data_2017_2019, self.bed_places_mean, on='geo')
-        self.merged_mean_data_2017_2019 = pd.merge(self.merged_mean_data_2017_2019, self.GDP_per_capita_mean, on='geo')
+        self.merged_mean_data_2017_2019 = pd.merge(self.population_mean, self.nights_spent_mean, on='geo', how='outer')
+        self.merged_mean_data_2017_2019 = pd.merge(self.merged_mean_data_2017_2019, self.bed_places_mean, on='geo', how='outer')
+        self.merged_mean_data_2017_2019 = pd.merge(self.merged_mean_data_2017_2019, self.GDP_per_capita_mean, on='geo', how='outer')
+
+        self.merged_mean_data_2017_2019.fillna(0, inplace=True)
+        self.merged_mean_data_2017_2019[['population', 'nights_spent', 'bed_places', 'GDP_per_capita']] = self.merged_mean_data_2017_2019[['population', 'nights_spent', 'bed_places', 'GDP_per_capita']].astype(int)
 
         self.merged_mean_data_2017_2019.rename(columns={'population': 'population_avg_2017_2019', 'nights_spent': 'nights_spent_avg_2017_2019', 
                                                 'bed_places': 'bed_places_avg_2017_2019', 'GDP_per_capita': 'GDP_per_capita_avg_2017_2019' }, inplace=True)
