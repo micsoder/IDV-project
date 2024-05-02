@@ -1,6 +1,6 @@
 import pandas as pd
 import geopandas as gpd
-from eu_countries import eu_countries
+from eu_countries import eu_countries, eu_country_names
 
 
 class DataFiltering():
@@ -19,6 +19,10 @@ class DataFiltering():
         self.nuts_polygons_unfiltered = self.data.nuts_polygons
         self.nuts2_polygons = self.nuts_polygons_unfiltered[self.nuts_polygons_unfiltered['LEVL_CODE'] == 2]
         self.nuts2_polygons = self.nuts2_polygons.sort_values(by='NUTS_ID', ascending=True)
+        self.nuts2_polygons = self.nuts2_polygons[self.nuts2_polygons['CNTR_CODE'].isin(eu_countries)]
+        self.nuts2_polygons['Country'] = self.nuts2_polygons['CNTR_CODE'].map(eu_country_names)
+        self.nuts2_polygons.rename(columns={'NUTS_ID': 'geo'}, inplace=True)
+        self.nuts2_polygons.drop(columns=['LEVL_CODE', 'CNTR_CODE'], inplace=True)
         self.nuts2_polygons.reset_index(drop=True, inplace=True)
 
 
@@ -28,7 +32,7 @@ class DataFiltering():
         self.population_data = self.population_data[self.population_data['geo'].str[:-2].isin(eu_countries)]
         self.population_data.rename(columns={'OBS_VALUE': 'population'}, inplace=True)
         self.population_data.reset_index(drop=True, inplace=True)
-        self.population_data.to_csv('output/population_data.csv')
+        #self.population_data.to_csv('output/population_data.csv')
         
 
     def filter_nights_spent(self):
@@ -37,7 +41,7 @@ class DataFiltering():
         self.nights_spent_data = self.nights_spent_data[self.nights_spent_data['geo'].str[:-2].isin(eu_countries)]
         self.nights_spent_data.rename(columns={'OBS_VALUE': 'nights_spent'}, inplace=True)
         self.nights_spent_data.reset_index(drop=True, inplace=True)
-        self.nights_spent_data.to_csv('output/nights_spent_data.csv')
+        #self.nights_spent_data.to_csv('output/nights_spent_data.csv')
 
     def filter_bed_places(self):
         self.bed_places_unfiltered_data = self.data.bed_places_tourist_data
@@ -45,7 +49,7 @@ class DataFiltering():
         self.bed_places_data = self.bed_places_data[self.bed_places_data['geo'].str[:-2].isin(eu_countries)]
         self.bed_places_data.rename(columns={'OBS_VALUE': 'bed_places'}, inplace=True)
         self.bed_places_data.reset_index(drop=True, inplace=True)      
-        self.bed_places_data.to_csv('output/bed_places_data.csv')
+        #self.bed_places_data.to_csv('output/bed_places_data.csv')
 
     def filter_GDP(self):
         self.GDP_unfiltered_data = self.data.GDP_data
@@ -53,7 +57,7 @@ class DataFiltering():
         self.GDP_data = self.GDP_data[self.GDP_data['geo'].str[:-2].isin(eu_countries)]
         self.GDP_data.rename(columns={'OBS_VALUE': 'GDP_per_capita'}, inplace=True)
         self.GDP_data.reset_index(drop=True, inplace=True)
-        self.GDP_data.to_csv('output/GDP_data.csv')
+        #self.GDP_data.to_csv('output/GDP_data.csv')
 
     def filter_tourist_industry(self):
 
@@ -62,4 +66,4 @@ class DataFiltering():
         self.tourist_industry = self.tourist_industry[self.tourist_industry['geo'].str[:-2].isin(eu_countries)]
         self.tourist_industry.rename(columns={'OBS_VALUE': 'number_of_employed'}, inplace=True)
         self.tourist_industry.reset_index(drop=True, inplace=True)
-        self.tourist_industry.to_csv('output/tourist_industry.csv')
+        #self.tourist_industry.to_csv('output/tourist_industry.csv')
