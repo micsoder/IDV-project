@@ -17,7 +17,7 @@ class DataProcessing():
         self.calculate_mean_for_2017_2019()
         self.merge_2017_2019_mean_values_to_df()
         self.percentual_difference_between_2020_and_mean_value_of_2017_2019()
-        self.categorize_percentual_diff_from_2017_2019_to_2020()
+        #self.categorize_percentual_diff_from_2017_2019_to_2020()
         #self.mean_number_of_employed_in_tourist_industry_2017_2019()
 
     def get_data(self):
@@ -59,6 +59,8 @@ class DataProcessing():
         self.merged_data_2020.rename(columns={'population': 'population_2020', 'nights_spent': 'nights_spent_2020', 
                                                 'bed_places': 'bed_places_2020', 'GDP_per_capita': 'GDP_per_capita_2020' }, inplace=True)
 
+        print('ATTENTION1 ')
+        print(self.merged_data_2020)
 
     def select_data_from_2017_2019(self):
         
@@ -86,6 +88,9 @@ class DataProcessing():
 
         new_df = pd.DataFrame({'geo': pivoted.index, column_name: pivoted[column_name]})
         new_df.reset_index(drop=True, inplace=True)
+
+        print('ATTENTION X')
+        print(new_df)
 
         return new_df
 
@@ -133,6 +138,8 @@ class DataProcessing():
         self.merged_mean_data_2017_2019.rename(columns={'population': 'population_avg_2017_2019', 'nights_spent': 'nights_spent_avg_2017_2019', 
                                                 'bed_places': 'bed_places_avg_2017_2019', 'GDP_per_capita': 'GDP_per_capita_avg_2017_2019' }, inplace=True)
 
+        print('ATTENTION 4')
+        print(self.merged_mean_data_2017_2019)
     
     def percentual_difference_between_2020_and_mean_value_of_2017_2019(self):
 
@@ -142,7 +149,12 @@ class DataProcessing():
             new_column_name = column1[:-5] + '_%_diff_from_avg_2017_2019_to_2020'
             merged_df[new_column_name] = round(((merged_df[column1] - merged_df[column2]) / merged_df[column2]) * 100, 2)
             
-        self.percentual_diff_between_2020_and_avg_2017_2019 = merged_df[['geo',  'nights_spent_%_diff_from_avg_2017_2019_to_2020']]
+        self.percentual_diff_between_2020_and_avg_2017_2019 = merged_df[['geo',  'nights_spent_%_diff_from_avg_2017_2019_to_2020', 'GDP_per_capita_%_diff_from_avg_2017_2019_to_2020']]
+
+        print('ATTENTION 5')
+        print(self.percentual_diff_between_2020_and_avg_2017_2019)
+
+        self.percentual_diff_between_2020_and_avg_2017_2019.to_csv('output/percentual_diff_between_2020_and_avg_2017_2019.csv', index=False)
     
     def categorize_percentual_diff_from_2017_2019_to_2020(self):
 
@@ -179,23 +191,6 @@ class DataProcessing():
 
 
 
-    def X_merge_2017_2019_avg_percent_diff_with_2020_diff(self):
-
-        df = pd.merge(self.merged_mean_percent_2017_2019, self.percentual_diff_between_2020_and_avg_2017_2019, on='geo')
-
-        df['impact_category'] = df.apply(self.categorize_difference, axis=1)
-        print(df.head(50))
-
-    def categorize_difference(self, row):
-        difference = row['nights_spent_%_diff_from_avg_2017_2019_to_2020']
-        avg_difference = row['nights_spent_avg_%_diff_2017_2019']
-
-        if abs(difference - avg_difference) <= 5:
-            return 0
-        elif difference > avg_difference:
-            return 1 if difference - avg_difference <= 20 else 2
-        else:
-            return -1 if avg_difference - difference <= 20 else -2
 
 
 

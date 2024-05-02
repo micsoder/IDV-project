@@ -15,9 +15,10 @@ class DataManagement():
         self.get_data()
         self.initiate_grouping_and_pivoting()
         self.NUTS2_name_df()
-        self.initiate_tourism_per_capita()
-        self.classify_tourism_degree()
-        self.merge_all_tourism_data_with_nuts2_polygons()
+        self.save_line_graf_data()
+        #self.initiate_tourism_per_capita()
+        #self.classify_tourism_degree()
+        #self.merge_all_tourism_data_with_nuts2_polygons()
 
     def get_data(self):
         
@@ -28,16 +29,22 @@ class DataManagement():
         self.GDP_data = self.filtered_data.GDP_data
         self.tourist_industry = self.filtered_data.tourist_industry
 
+        print('ATTENTION')
+        print(self.nights_spent_data)
+        print(self.GDP_data)
+
 
     def initiate_grouping_and_pivoting(self):
-
-        self.tourist_industry_pivoted = self.groupby_geo_and_timeperiod(self.tourist_industry, 'number_of_employed', 'tourist_industry')
+        
         self.population_data_pivoted = self.groupby_geo_and_timeperiod(self.population_data, 'population', 'population')
-        self.bed_places_data_pivoted = self.groupby_geo_and_timeperiod(self.bed_places_data, 'bed_places', 'beds')
+        #self.tourist_industry_pivoted = self.groupby_geo_and_timeperiod(self.tourist_industry, 'number_of_employed', 'tourist_industry')
+        #self.bed_places_data_pivoted = self.groupby_geo_and_timeperiod(self.bed_places_data, 'bed_places', 'beds')
+        self.nights_spent_data_pivoted = self.groupby_geo_and_timeperiod(self.nights_spent_data, 'nights_spent', 'nights')
+        self.GDP_data_pivoted = self.groupby_geo_and_timeperiod(self.GDP_data, 'GDP_per_capita', 'GDP')
         
 
     def groupby_geo_and_timeperiod(self, df, value, col_name):
-        df = df[df['TIME_PERIOD'].isin([2017, 2018, 2019])].reset_index(drop=True)
+        df = df[df['TIME_PERIOD'].isin([2017, 2018, 2019, 2020])].reset_index(drop=True)
         df = df.groupby(['geo', 'TIME_PERIOD'])[value].sum().reset_index()
 
         pivoted = df.pivot(index='geo', columns='TIME_PERIOD', values=value)
@@ -52,6 +59,11 @@ class DataManagement():
         print(pivoted)
 
         return pivoted
+    
+    def save_line_graf_data(self):
+
+        self.nights_spent_data_pivoted.to_csv('output/nights_spent_line_graf_data.csv', index=False)
+        self.GDP_data_pivoted.to_csv('output/GDP_line_graf_data.csv', index=False )
 
     def NUTS2_name_df(self):
 
@@ -83,17 +95,11 @@ class DataManagement():
         self.average_tourist_industry_employed.replace([np.inf, -np.inf], np.nan, inplace=True)
         self.average_tourist_industry_employed.dropna(inplace=True)
 
-        print(self.average_tourist_industry_employed)
+        quantiles = self.average_tourist_industry_employed['tourist_industry/average_per_capita'].quantile([0, 0.2, 0.4, 0.6, 0.8, 1.0])
 
-        values = self.average_tourist_industry_employed['tourist_industry/average_per_capita']
-        classifier = NaturalBreaks(values, k=3)
-        self.average_tourist_industry_employed['Degree_of_tourism'] = classifier.yb
+        self.average_tourist_industry_employed['Degree_of_tourism'] = pd.cut(self.average_tourist_industry_employed['tourist_industry/average_per_capita'], bins=quantiles, labels=False)
         print(self.average_tourist_industry_employed)
-
-        thresholds = classifier.bins
-        print("Thresholds for each category:")
-        for i, threshold in enumerate(thresholds):
-            print(f"Category {i}: {threshold:.2f}")
+ 
 
     def merge_all_tourism_data_with_nuts2_polygons(self):
         self.tourism_data = pd.merge(self.average_tourist_industry_employed, self.average_beds, on='geo')

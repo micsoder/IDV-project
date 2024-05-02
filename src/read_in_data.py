@@ -20,7 +20,7 @@ class ReadData():
 
 
     def read_in_population_data(self):
-        fp = 'data/NUTS2_population_count.csv.gz'
+        fp = 'data/nuts2_broad_age_population.csv.gz'
 
         self.population_data = pd.read_csv(fp)
 
@@ -47,6 +47,8 @@ class ReadData():
         fp = 'data/employed_tourist_industry_per_nuts2.csv.gz'
 
         self.tourist_industry = pd.read_csv(fp)
+    
+    
 
 
 

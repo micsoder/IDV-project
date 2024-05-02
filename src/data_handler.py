@@ -23,5 +23,5 @@ class DataHandler():
     def process_data(self):
         print('starting data management..')
 
-        #DataProcessing(self.filtered_data)
-        DataManagement(self.filtered_data)
+        DataProcessing(self.filtered_data)
+        #DataManagement(self.filtered_data)
