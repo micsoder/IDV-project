@@ -28,10 +28,7 @@ class DataManagement():
         self.bed_places_data = self.filtered_data.bed_places_data
         self.GDP_data = self.filtered_data.GDP_data
         self.tourist_industry = self.filtered_data.tourist_industry
-
-        print('ATTENTION')
-        print(self.nights_spent_data)
-        print(self.GDP_data)
+        self.unemployment_data = self.filtered_data.unemployment_data
 
 
     def initiate_grouping_and_pivoting(self):
@@ -41,6 +38,7 @@ class DataManagement():
         #self.bed_places_data_pivoted = self.groupby_geo_and_timeperiod(self.bed_places_data, 'bed_places', 'beds')
         self.nights_spent_data_pivoted = self.groupby_geo_and_timeperiod(self.nights_spent_data, 'nights_spent', 'nights')
         self.GDP_data_pivoted = self.groupby_geo_and_timeperiod(self.GDP_data, 'GDP_per_capita', 'GDP')
+        self.unemployment_data_pivoted = self.groupby_geo_and_timeperiod(self.unemployment_data, 'unemployed', 'unemployed')
         
 
     def groupby_geo_and_timeperiod(self, df, value, col_name):
@@ -64,6 +62,7 @@ class DataManagement():
 
         self.nights_spent_data_pivoted.to_csv('output/nights_spent_line_graf_data.csv', index=False)
         self.GDP_data_pivoted.to_csv('output/GDP_line_graf_data.csv', index=False )
+        self.unemployment_data_pivoted.to_csv('output/Unemployed_line_graf_data.csv', index=False)
 
     def NUTS2_name_df(self):
 

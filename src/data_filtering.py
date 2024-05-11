@@ -14,6 +14,7 @@ class DataFiltering():
         self.filter_bed_places()
         self.filter_GDP()
         self.filter_tourist_industry()
+        self.filter_unemployed_data()
 
     def filter_nuts_polygons(self):
         self.nuts_polygons_unfiltered = self.data.nuts_polygons
@@ -32,7 +33,6 @@ class DataFiltering():
         self.population_data = self.population_data[self.population_data['geo'].str[:-2].isin(eu_countries)]
         self.population_data.rename(columns={'OBS_VALUE': 'population'}, inplace=True)
         self.population_data.reset_index(drop=True, inplace=True)
-        #self.population_data.to_csv('output/population_data.csv')
         
 
     def filter_nights_spent(self):
@@ -41,7 +41,7 @@ class DataFiltering():
         self.nights_spent_data = self.nights_spent_data[self.nights_spent_data['geo'].str[:-2].isin(eu_countries)]
         self.nights_spent_data.rename(columns={'OBS_VALUE': 'nights_spent'}, inplace=True)
         self.nights_spent_data.reset_index(drop=True, inplace=True)
-        #self.nights_spent_data.to_csv('output/nights_spent_data.csv')
+
 
     def filter_bed_places(self):
         self.bed_places_unfiltered_data = self.data.bed_places_tourist_data
@@ -49,7 +49,7 @@ class DataFiltering():
         self.bed_places_data = self.bed_places_data[self.bed_places_data['geo'].str[:-2].isin(eu_countries)]
         self.bed_places_data.rename(columns={'OBS_VALUE': 'bed_places'}, inplace=True)
         self.bed_places_data.reset_index(drop=True, inplace=True)      
-        #self.bed_places_data.to_csv('output/bed_places_data.csv')
+
 
     def filter_GDP(self):
         self.GDP_unfiltered_data = self.data.GDP_data
@@ -57,7 +57,7 @@ class DataFiltering():
         self.GDP_data = self.GDP_data[self.GDP_data['geo'].str[:-2].isin(eu_countries)]
         self.GDP_data.rename(columns={'OBS_VALUE': 'GDP_per_capita'}, inplace=True)
         self.GDP_data.reset_index(drop=True, inplace=True)
-        #self.GDP_data.to_csv('output/GDP_data.csv')
+
 
     def filter_tourist_industry(self):
 
@@ -66,4 +66,11 @@ class DataFiltering():
         self.tourist_industry = self.tourist_industry[self.tourist_industry['geo'].str[:-2].isin(eu_countries)]
         self.tourist_industry.rename(columns={'OBS_VALUE': 'number_of_employed'}, inplace=True)
         self.tourist_industry.reset_index(drop=True, inplace=True)
-        #self.tourist_industry.to_csv('output/tourist_industry.csv')
+
+    
+    def filter_unemployed_data(self):
+        self.unemployed_unfiltered_data = self.data.unemployed_data
+        self.unemployment_data = self.unemployed_unfiltered_data[['geo', 'TIME_PERIOD', 'OBS_VALUE']].copy()
+        self.unemployment_data = self.unemployment_data[self.unemployment_data['geo'].str[:-2].isin(eu_countries)]
+        self.unemployment_data.rename(columns={'OBS_VALUE': 'unemployed'}, inplace=True)
+        self.unemployment_data.reset_index(drop=True, inplace=True)

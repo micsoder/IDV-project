@@ -12,6 +12,7 @@ class ReadData():
         self.read_in_bed_places_tourist_data()
         self.read_in_GDP_data()
         self.read_in_tourist_industry_data()
+        self.read_in_unemployed_data()
 
     def read_in_polygon_data(self):
         fp = 'data/nuts_polygons.gpkg'
@@ -49,6 +50,11 @@ class ReadData():
         self.tourist_industry = pd.read_csv(fp)
     
     
+    def read_in_unemployed_data(self):
+
+        fp = 'data/unemployment_rate_nuts2_total_isced.csv.gz'
+
+        self.unemployed_data = pd.read_csv(fp)
 
 
 

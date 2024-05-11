@@ -28,6 +28,7 @@ class DataProcessing():
         self.bed_places_data = self.filtered_data.bed_places_data
         self.GDP_data = self.filtered_data.GDP_data
         self.tourist_industry = self.filtered_data.tourist_industry
+        self.unemployment_data = self.filtered_data.unemployment_data
     
 
     def select_data_from_2020(self):
@@ -36,28 +37,32 @@ class DataProcessing():
         self.nights_spent_data_2020 = self.nights_spent_data[self.nights_spent_data['TIME_PERIOD'] == 2020].reset_index(drop=True)
         self.bed_places_data_2020 = self.bed_places_data[self.bed_places_data['TIME_PERIOD'] == 2020].reset_index(drop=True)
         self.GDP_data_2020 = self.GDP_data[self.GDP_data['TIME_PERIOD'] == 2020].reset_index(drop=True)
+        self.unemployment_data_2020 = self.unemployment_data[self.unemployment_data['TIME_PERIOD'] == 2020].reset_index(drop=True)
 
         self.population_data_2020 = self.population_data_2020.drop(columns=['TIME_PERIOD'])
         self.nights_spent_data_2020 = self.nights_spent_data_2020.drop(columns=['TIME_PERIOD'])
         self.bed_places_data_2020 = self.bed_places_data_2020.drop(columns=['TIME_PERIOD'])
         self.GDP_data_2020 = self.GDP_data_2020.drop(columns=['TIME_PERIOD'])
+        self.unemployment_data_2020 = self.unemployment_data_2020.drop(columns=['TIME_PERIOD'])
 
         self.population_data_2020 = self.population_data_2020.groupby('geo').sum().reset_index()
         self.nights_spent_data_2020 = self.nights_spent_data_2020.groupby('geo').sum().reset_index()
         self.bed_places_data_2020 = self.bed_places_data_2020.groupby('geo').sum().reset_index()
         self.GDP_data_2020 = self.GDP_data_2020.groupby('geo').sum().reset_index()
+        self.unemployment_data_2020 = self.unemployment_data_2020.groupby('geo').sum().reset_index()
 
     def merge_2020_values_to_df(self):
 
         self.merged_data_2020 = pd.merge(self.population_data_2020, self.nights_spent_data_2020, on='geo', how='outer')
         self.merged_data_2020 = pd.merge(self.merged_data_2020, self.bed_places_data_2020, on='geo', how='outer')
         self.merged_data_2020 = pd.merge(self.merged_data_2020, self.GDP_data_2020, on='geo', how='outer')
+        self.merged_data_2020 = pd.merge(self.merged_data_2020, self.unemployment_data_2020, on='geo', how='outer')
         
         self.merged_data_2020.fillna(0, inplace=True)
 
         self.merged_data_2020[['population', 'nights_spent', 'bed_places', 'GDP_per_capita']] = self.merged_data_2020[['population', 'nights_spent', 'bed_places', 'GDP_per_capita']].astype(int)
         self.merged_data_2020.rename(columns={'population': 'population_2020', 'nights_spent': 'nights_spent_2020', 
-                                                'bed_places': 'bed_places_2020', 'GDP_per_capita': 'GDP_per_capita_2020' }, inplace=True)
+                                                'bed_places': 'bed_places_2020', 'GDP_per_capita': 'GDP_per_capita_2020', 'unemployed': 'unemployed_2020' }, inplace=True)
 
         print('ATTENTION1 ')
         print(self.merged_data_2020)
@@ -68,17 +73,22 @@ class DataProcessing():
         self.nights_spent_data_2017_2019 = self.nights_spent_data[self.nights_spent_data['TIME_PERIOD'].isin([2017, 2018, 2019])].reset_index(drop=True)
         self.bed_places_data_2017_2019 = self.bed_places_data[self.bed_places_data['TIME_PERIOD'].isin([2017, 2018, 2019])].reset_index(drop=True)
         self.GDP_data_2017_2019 = self.GDP_data[self.GDP_data['TIME_PERIOD'].isin([2017, 2018, 2019])].reset_index(drop=True)
+        self.unemployment_data_2017_2019 = self.unemployment_data[self.unemployment_data['TIME_PERIOD'].isin([2017, 2018, 2019])].reset_index(drop=True)
 
         self.population_avg_percent_diff_2017_2019 = self.avg_percentual_different_between_2017_2019(self.population_data_2017_2019, 'population')
         self.nights_avg_percent_diff_2017_2019 = self.avg_percentual_different_between_2017_2019(self.nights_spent_data_2017_2019, 'nights_spent')
         self.beds_avg_percent_diff_2017_2019 = self.avg_percentual_different_between_2017_2019(self.bed_places_data_2017_2019, 'bed_places')
         self.GDP_avg_percent_diff_2017_2019 = self.avg_percentual_different_between_2017_2019(self.GDP_data_2017_2019, 'GDP_per_capita')
+        self.unemployment_avg_percent_diff_2017_2019 = self.avg_percentual_different_between_2017_2019(self.unemployment_data_2017_2019, 'unemployed')
 
 
     def avg_percentual_different_between_2017_2019(self, df, value):
 
         df = df.groupby(['geo', 'TIME_PERIOD'])[value].sum().reset_index()
         pivoted = df.pivot(index='geo', columns='TIME_PERIOD', values=value)
+        print('double attention')
+        print(pivoted)
+
 
         column_name = f'{value}_avg_%_diff_2017_2019'
         
@@ -89,9 +99,6 @@ class DataProcessing():
         new_df = pd.DataFrame({'geo': pivoted.index, column_name: pivoted[column_name]})
         new_df.reset_index(drop=True, inplace=True)
 
-        print('ATTENTION X')
-        print(new_df)
-
         return new_df
 
     def merge_2017_2019_mean_percent_values_to_df(self):
@@ -99,9 +106,10 @@ class DataProcessing():
         self.merged_mean_percent_2017_2019 = pd.merge(self.population_avg_percent_diff_2017_2019, self.nights_avg_percent_diff_2017_2019, on='geo', how='outer')
         self.merged_mean_percent_2017_2019 = pd.merge(self.merged_mean_percent_2017_2019, self.beds_avg_percent_diff_2017_2019, on='geo', how='outer')
         self.merged_mean_percent_2017_2019 = pd.merge(self.merged_mean_percent_2017_2019, self.GDP_avg_percent_diff_2017_2019, on='geo', how='outer')
+        self.merged_mean_percent_2017_2019 = pd.merge(self.merged_mean_percent_2017_2019, self.unemployment_avg_percent_diff_2017_2019, on='geo', how='outer')        
 
         self.merged_mean_percent_2017_2019.fillna(0, inplace=True)
-        self.merged_mean_percent_2017_2019.drop(columns=['population_avg_%_diff_2017_2019', 'bed_places_avg_%_diff_2017_2019', 'GDP_per_capita_avg_%_diff_2017_2019'], inplace=True)
+        self.merged_mean_percent_2017_2019.drop(columns=['population_avg_%_diff_2017_2019', 'bed_places_avg_%_diff_2017_2019'], inplace=True)
 
         print('ATTENTION, mean percent merged:')
         print(self.merged_mean_percent_2017_2019.head())
@@ -125,18 +133,24 @@ class DataProcessing():
         self.GDP_per_capita_mean['GDP_per_capita'] /= 3
         self.GDP_per_capita_mean['GDP_per_capita'] = self.GDP_per_capita_mean['GDP_per_capita'].astype(int)
 
+        self.unemployment_mean = self.unemployment_data_2017_2019.groupby('geo')['unemployed'].sum().reset_index()
+        self.unemployment_mean['unemployed'] /= 3
+        self.unemployment_mean['unemployed'] = self.unemployment_mean['unemployed'].astype(int)
+        print('ATTENTION MEAN UN')
+        print(self.unemployment_mean)
     
     def merge_2017_2019_mean_values_to_df(self):
 
         self.merged_mean_data_2017_2019 = pd.merge(self.population_mean, self.nights_spent_mean, on='geo', how='outer')
         self.merged_mean_data_2017_2019 = pd.merge(self.merged_mean_data_2017_2019, self.bed_places_mean, on='geo', how='outer')
         self.merged_mean_data_2017_2019 = pd.merge(self.merged_mean_data_2017_2019, self.GDP_per_capita_mean, on='geo', how='outer')
+        self.merged_mean_data_2017_2019 = pd.merge(self.merged_mean_data_2017_2019, self.unemployment_mean, on='geo', how='outer')
 
         self.merged_mean_data_2017_2019.fillna(0, inplace=True)
         self.merged_mean_data_2017_2019[['population', 'nights_spent', 'bed_places', 'GDP_per_capita']] = self.merged_mean_data_2017_2019[['population', 'nights_spent', 'bed_places', 'GDP_per_capita']].astype(int)
 
         self.merged_mean_data_2017_2019.rename(columns={'population': 'population_avg_2017_2019', 'nights_spent': 'nights_spent_avg_2017_2019', 
-                                                'bed_places': 'bed_places_avg_2017_2019', 'GDP_per_capita': 'GDP_per_capita_avg_2017_2019' }, inplace=True)
+                                                'bed_places': 'bed_places_avg_2017_2019', 'GDP_per_capita': 'GDP_per_capita_avg_2017_2019', 'unemployed': 'unemployed_avg_2017_2019' }, inplace=True)
 
         print('ATTENTION 4')
         print(self.merged_mean_data_2017_2019)
@@ -147,14 +161,17 @@ class DataProcessing():
 
         for column1, column2 in zip(self.merged_data_2020.columns[1:], self.merged_mean_data_2017_2019.columns[1:]):
             new_column_name = column1[:-5] + '_%_diff_from_avg_2017_2019_to_2020'
-            merged_df[new_column_name] = round(((merged_df[column1] - merged_df[column2]) / merged_df[column2]) * 100, 2)
+            if column1 == 'unemployed_2020':
+                merged_df[new_column_name] = round(((merged_df[column1] - merged_df[column2]) / merged_df[column2]), 2)
+            else:
+                merged_df[new_column_name] = round(((merged_df[column1] - merged_df[column2]) / merged_df[column2]) * 100, 2)
             
-        self.percentual_diff_between_2020_and_avg_2017_2019 = merged_df[['geo',  'nights_spent_%_diff_from_avg_2017_2019_to_2020', 'GDP_per_capita_%_diff_from_avg_2017_2019_to_2020']]
+        self.percentual_diff_between_2020_and_avg_2017_2019 = merged_df[['geo',  'nights_spent_%_diff_from_avg_2017_2019_to_2020', 'GDP_per_capita_%_diff_from_avg_2017_2019_to_2020', 'unemployed_%_diff_from_avg_2017_2019_to_2020']]
 
         print('ATTENTION 5')
         print(self.percentual_diff_between_2020_and_avg_2017_2019)
 
-        self.percentual_diff_between_2020_and_avg_2017_2019.to_csv('output/percentual_diff_between_2020_and_avg_2017_2019.csv', index=False)
+        self.percentual_diff_between_2020_and_avg_2017_2019.to_csv('output/diff_between_2020_and_avg_2017_2019.csv', index=False)
     
     def categorize_percentual_diff_from_2017_2019_to_2020(self):
 
